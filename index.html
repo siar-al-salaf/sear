@@ -25,7 +25,7 @@
         <div id="cardsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
     </main>
 
-    <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4">
+    <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-50">
         <form id="addCharForm" class="bg-white p-6 rounded-2xl w-full max-w-lg relative max-h-[90vh] overflow-y-auto">
             <button type="button" onclick="document.getElementById('modal').classList.add('hidden')" class="absolute top-4 left-4 text-gray-400 hover:text-red-500 font-bold text-xl">X</button>
             <h2 class="text-2xl font-bold mb-4 text-emerald-800">إضافة شخصية جديدة</h2>
@@ -51,7 +51,7 @@
 
         async function loadCharacters() {
             const { data, error } = await supabase.from('sear').select('*');
-            if (error) { console.error(error); return; }
+            if (error) { console.error("خطأ في التحميل:", error); return; }
             
             const container = document.getElementById('cardsContainer');
             container.innerHTML = data.map(c => `
@@ -59,17 +59,14 @@
                     <h2 class="text-xl font-bold text-emerald-900">${c.name || 'بدون اسم'}</h2>
                     <p class="text-xs text-slate-400 mt-1">${c.generation || ''} | ${c.birth_year || ''} - ${c.death_year || ''}</p>
                     <p class="mt-3 text-slate-700 text-sm">${c.description || ''}</p>
-                    <div class="mt-3 pt-3 border-t text-xs text-slate-500">
-                        <p>العلم: ${c.field_of_study || '-'}</p>
-                        <p>المؤلفات: ${c.works || '-'}</p>
-                    </div>
                 </div>
             `).join('');
         }
 
         document.getElementById('addCharForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const { error } = await supabase.from('sear').insert([{
+            
+            const dataToInsert = {
                 name: document.getElementById('name').value,
                 generation: document.getElementById('generation').value,
                 birth_year: document.getElementById('birth_year').value,
@@ -79,11 +76,13 @@
                 description: document.getElementById('description').value,
                 notes: document.getElementById('notes').value,
                 fame: document.getElementById('fame').value
-            }]);
+            };
+
+            const { error } = await supabase.from('sear').insert([dataToInsert]);
 
             if (error) {
-                console.error(error);
-                alert('فشل الحفظ. تأكد من إعدادات الصلاحيات (Policies) في Supabase.');
+                console.error("خطأ الحفظ:", error);
+                alert('فشل الحفظ. تأكد من أن جميع الأعمدة (name, generation, إلخ) موجودة في جدول Supabase.');
             } else {
                 alert('تم الحفظ بنجاح!');
                 document.getElementById('modal').classList.add('hidden');
