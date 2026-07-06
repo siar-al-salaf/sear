@@ -1,19 +1,20 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-    <div id="loginSection">
-        <input type="email" id="email" placeholder="الإيميل">
-        <input type="password" id="password" placeholder="الرمز">
-        <button id="loginBtn">دخول</button>
+
+    <div id="formSection">
+        <input type="text" id="name" placeholder="الاسم">
+        <button id="addBtn">إضافة للجدول</button>
     </div>
 
-    <div id="addSection" style="display:none;">
-        <input type="text" id="name" placeholder="الاسم">
-        <button id="addBtn">إضافة شخصية</button>
+    <div id="loginSection" style="display:none; border:1px solid #ccc; padding:10px; margin-top:20px;">
+        <p>يجب تسجيل الدخول للإضافة:</p>
+        <input type="email" id="email" placeholder="الإيميل">
+        <input type="password" id="pass" placeholder="الرمز">
+        <button id="loginBtn">دخول</button>
     </div>
 
     <script>
@@ -22,25 +23,34 @@
             'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsd3N6cGtyd2d5YmlibmFya3Z6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMzMjMzMjEsImV4cCI6MjA5ODg5OTMyMX0.XJql__Y7e06j337mLCRduBf3tuVdlkB3Lv43H4xyN3E'
         );
 
-        // عملية تسجيل الدخول
+        // محاولة الإضافة
+        document.getElementById('addBtn').onclick = async () => {
+            // التحقق من حالة المستخدم
+            const { data: { user } } = await supabase.auth.getUser();
+
+            if (!user) {
+                document.getElementById('loginSection').style.display = 'block';
+                alert("يرجى تسجيل الدخول أولاً");
+                return;
+            }
+
+            // إذا كان المستخدم مسجلاً، يتم التنفيذ
+            const { error } = await supabase.from('sear').insert([{ name: document.getElementById('name').value }]);
+            if (error) alert("خطأ: " + error.message);
+            else alert("تمت الإضافة بنجاح!");
+        };
+
+        // تنفيذ الدخول
         document.getElementById('loginBtn').onclick = async () => {
             const { error } = await supabase.auth.signInWithPassword({
                 email: document.getElementById('email').value,
-                password: document.getElementById('password').value
+                password: document.getElementById('pass').value
             });
             if (error) alert("خطأ دخول: " + error.message);
             else {
+                alert("تم الدخول! اضغط إضافة مرة أخرى.");
                 document.getElementById('loginSection').style.display = 'none';
-                document.getElementById('addSection').style.display = 'block';
-                alert("تم الدخول! الآن يمكنك الإضافة.");
             }
-        };
-
-        // عملية الإضافة
-        document.getElementById('addBtn').onclick = async () => {
-            const { error } = await supabase.from('sear').insert([{ name: document.getElementById('name').value }]);
-            if (error) alert("فشل الإضافة: " + error.message);
-            else alert("تمت الإضافة بنجاح!");
         };
     </script>
 </body>
