@@ -2,35 +2,23 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>سير السلف</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body class="bg-slate-50 min-h-screen">
+<body class="bg-slate-50 p-6">
+    <h1 class="text-3xl font-bold text-center mb-6">سير السلف</h1>
+    
+    <button onclick="document.getElementById('modal').classList.remove('hidden')" class="bg-blue-600 text-white px-4 py-2 rounded mb-4">إضافة شخصية</button>
 
-    <header class="bg-emerald-700 text-white p-8 text-center shadow-lg">
-        <h1 class="text-4xl font-bold">سير السلف</h1>
-    </header>
+    <div id="cardsContainer" class="grid gap-4"></div>
 
-    <main class="max-w-4xl mx-auto p-6">
-        <button onclick="document.getElementById('modal').classList.remove('hidden')" class="bg-blue-600 text-white px-6 py-2 rounded-lg mb-6 shadow-md hover:bg-blue-700 transition">
-            + إضافة سيرة
-        </button>
-
-        <div id="cardsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            </div>
-    </main>
-
-    <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-50">
-        <form id="addCharForm" class="bg-white p-6 rounded-2xl w-full max-w-lg">
-            <h2 class="text-2xl font-bold mb-4 text-emerald-800">إضافة شخصية</h2>
-            <input type="text" id="name" placeholder="الاسم" class="w-full p-2 border rounded mb-3" required>
-            <input type="text" id="death_year" placeholder="سنة الوفاة" class="w-full p-2 border rounded mb-3">
-            <textarea id="description" placeholder="الشرح" class="w-full p-2 border rounded mb-3"></textarea>
-            
-            <button type="submit" class="w-full bg-emerald-600 text-white py-2 rounded-lg hover:bg-emerald-700">حفظ</button>
-            <button type="button" onclick="document.getElementById('modal').classList.add('hidden')" class="w-full mt-2 text-gray-500">إلغاء</button>
+    <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4">
+        <form id="addForm" class="bg-white p-6 rounded w-full max-w-sm">
+            <input type="text" id="name" placeholder="الاسم" class="w-full border p-2 mb-2" required>
+            <input type="text" id="death_year" placeholder="سنة الوفاة" class="w-full border p-2 mb-2">
+            <button type="submit" class="w-full bg-green-600 text-white p-2">حفظ</button>
+            <button type="button" onclick="document.getElementById('modal').classList.add('hidden')" class="w-full mt-2">إغلاق</button>
         </form>
     </div>
 
@@ -39,38 +27,33 @@
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsd3N6cGtyd2d5YmlibmFya3Z6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMzMjMzMjEsImV4cCI6MjA5ODg5OTMyMX0.XJql__Y7e06j337mLCRduBf3tuVdlkB3Lv43H4xyN3E';
         const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-        async function loadCharacters() {
-            const { data, error } = await supabase.from('sear').select('*');
-            if (error) { console.error("خطأ:", error); return; }
-            
+        async function load() {
+            const { data } = await supabase.from('sear').select('*');
             const container = document.getElementById('cardsContainer');
             container.innerHTML = data.map(c => `
-                <div class="bg-white p-5 rounded-xl border-r-4 border-emerald-500 shadow-sm">
-                    <h2 class="text-xl font-bold text-emerald-900">${c.name || 'بدون اسم'}</h2>
-                    <p class="text-slate-600">${c.description || ''}</p>
-                    <p class="text-xs text-slate-400 mt-2">وفاة: ${c.death_year || 'غير محدد'}</p>
+                <div class="bg-white p-4 border shadow">
+                    <h3>${c.name}</h3>
+                    <p>الوفاة: ${c.death_year}</p>
                 </div>
             `).join('');
         }
 
-        document.getElementById('addCharForm').addEventListener('submit', async (e) => {
+        document.getElementById('addForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const { error } = await supabase.from('sear').insert([{
                 name: document.getElementById('name').value,
-                death_year: document.getElementById('death_year').value,
-                description: document.getElementById('description').value
+                death_year: document.getElementById('death_year').value
             }]);
-
-            if (error) {
-                alert('خطأ في الحفظ: ' + error.message);
-            } else {
-                alert('تم الحفظ!');
+            
+            if (error) alert("خطأ: " + error.message);
+            else {
+                alert("تم الحفظ!");
                 document.getElementById('modal').classList.add('hidden');
-                loadCharacters();
+                load();
             }
         });
 
-        loadCharacters();
+        load();
     </script>
 </body>
 </html>
