@@ -8,21 +8,22 @@
 </head>
 <body class="bg-gray-100 p-6">
     <h1 class="text-3xl font-bold text-center mb-6">سير السلف</h1>
-    
-    <div id="authSection" class="max-w-md mx-auto bg-white p-6 rounded shadow mb-6">
-        <h2 class="font-bold mb-2">دخول المسؤول للإضافة</h2>
+
+    <div id="authDiv" class="max-w-md mx-auto bg-white p-6 rounded shadow mb-6">
+        <h2 class="font-bold mb-2">تسجيل دخول المسؤول</h2>
         <input type="email" id="email" placeholder="البريد الإلكتروني" class="w-full border p-2 mb-2">
         <input type="password" id="pass" placeholder="كلمة المرور" class="w-full border p-2 mb-2">
-        <button onclick="login()" class="w-full bg-emerald-600 text-white p-2">تسجيل الدخول</button>
+        <button onclick="login()" class="w-full bg-emerald-600 text-white p-2">دخول</button>
     </div>
 
-    <div id="addSection" class="max-w-md mx-auto bg-white p-6 rounded shadow hidden">
-        <h2 class="font-bold mb-2">إضافة شخصية جديدة</h2>
+    <div id="addDiv" class="max-w-md mx-auto bg-white p-6 rounded shadow mb-6 hidden">
         <input type="text" id="name" placeholder="الاسم" class="w-full border p-2 mb-2">
         <input type="text" id="death_year" placeholder="سنة الوفاة" class="w-full border p-2 mb-2">
-        <button onclick="addChar()" class="w-full bg-blue-600 text-white p-2">حفظ</button>
-        <button onclick="logout()" class="w-full mt-2 text-red-500">خروج</button>
+        <button onclick="addChar()" class="w-full bg-blue-600 text-white p-2 mb-2">حفظ الشخصية</button>
+        <button onclick="location.reload()" class="w-full text-red-500">خروج</button>
     </div>
+
+    <div id="cardsContainer" class="max-w-md mx-auto grid gap-4"></div>
 
     <script>
         const supabase = supabase.createClient(
@@ -31,29 +32,44 @@
         );
 
         async function login() {
-            const email = document.getElementById('email').value;
-            const pass = document.getElementById('pass').value;
-            const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
+            const { error } = await supabase.auth.signInWithPassword({
+                email: document.getElementById('email').value,
+                password: document.getElementById('pass').value
+            });
             if (error) alert(error.message);
-            else {
-                document.getElementById('authSection').classList.add('hidden');
-                document.getElementById('addSection').classList.remove('hidden');
-            }
+            else location.reload();
         }
 
         async function addChar() {
-            const { error } = await supabase.from('sear').insert([
-                { name: document.getElementById('name').value, death_year: document.getElementById('death_year').value }
-            ]);
+            const { error } = await supabase.from('sear').insert([{
+                name: document.getElementById('name').value,
+                death_year: document.getElementById('death_year').value
+            }]);
             if (error) alert("خطأ: " + error.message);
-            else alert("تم الحفظ بنجاح!");
+            else { alert("تم الحفظ!"); loadData(); }
         }
 
-        async function logout() {
-            await supabase.auth.signOut();
-            location.reload();
+        async function loadData() {
+            const { data } = await supabase.from('sear').select('*');
+            if (data) {
+                document.getElementById('cardsContainer').innerHTML = data.map(c => `
+                    <div class="bg-white p-4 rounded shadow">
+                        <h3 class="font-bold">${c.name}</h3>
+                        <p>الوفاة: ${c.death_year}</p>
+                    </div>
+                `).join('');
+            }
         }
+
+        // التحقق من حالة الدخول عند فتح الصفحة
+        supabase.auth.getSession().then(({ data }) => {
+            if (data.session) {
+                document.getElementById('authDiv').classList.add('hidden');
+                document.getElementById('addDiv').classList.remove('hidden');
+            }
+        });
+
+        loadData();
     </script>
 </body>
 </html>
-
