@@ -2,28 +2,19 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>موقع سير السلف</title>
-    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body class="bg-gray-100 p-6">
-    <h1 class="text-3xl font-bold text-center mb-6">سير السلف</h1>
-
-    <div id="authDiv" class="max-w-md mx-auto bg-white p-6 rounded shadow mb-6">
-        <h2 class="font-bold mb-2">تسجيل دخول المسؤول</h2>
-        <input type="email" id="email" placeholder="البريد الإلكتروني" class="w-full border p-2 mb-2">
-        <input type="password" id="pass" placeholder="كلمة المرور" class="w-full border p-2 mb-2">
-        <button onclick="login()" class="w-full bg-emerald-600 text-white p-2">دخول</button>
+<body>
+    <div id="loginSection">
+        <input type="email" id="email" placeholder="الإيميل">
+        <input type="password" id="password" placeholder="الرمز">
+        <button id="loginBtn">دخول</button>
     </div>
 
-    <div id="addDiv" class="max-w-md mx-auto bg-white p-6 rounded shadow mb-6 hidden">
-        <input type="text" id="name" placeholder="الاسم" class="w-full border p-2 mb-2">
-        <input type="text" id="death_year" placeholder="سنة الوفاة" class="w-full border p-2 mb-2">
-        <button onclick="addChar()" class="w-full bg-blue-600 text-white p-2 mb-2">حفظ الشخصية</button>
-        <button onclick="location.reload()" class="w-full text-red-500">خروج</button>
+    <div id="addSection" style="display:none;">
+        <input type="text" id="name" placeholder="الاسم">
+        <button id="addBtn">إضافة شخصية</button>
     </div>
-
-    <div id="cardsContainer" class="max-w-md mx-auto grid gap-4"></div>
 
     <script>
         const supabase = supabase.createClient(
@@ -31,45 +22,26 @@
             'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsd3N6cGtyd2d5YmlibmFya3Z6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMzMjMzMjEsImV4cCI6MjA5ODg5OTMyMX0.XJql__Y7e06j337mLCRduBf3tuVdlkB3Lv43H4xyN3E'
         );
 
-        async function login() {
+        // عملية تسجيل الدخول
+        document.getElementById('loginBtn').onclick = async () => {
             const { error } = await supabase.auth.signInWithPassword({
                 email: document.getElementById('email').value,
-                password: document.getElementById('pass').value
+                password: document.getElementById('password').value
             });
-            if (error) alert(error.message);
-            else location.reload();
-        }
-
-        async function addChar() {
-            const { error } = await supabase.from('sear').insert([{
-                name: document.getElementById('name').value,
-                death_year: document.getElementById('death_year').value
-            }]);
-            if (error) alert("خطأ: " + error.message);
-            else { alert("تم الحفظ!"); loadData(); }
-        }
-
-        async function loadData() {
-            const { data } = await supabase.from('sear').select('*');
-            if (data) {
-                document.getElementById('cardsContainer').innerHTML = data.map(c => `
-                    <div class="bg-white p-4 rounded shadow">
-                        <h3 class="font-bold">${c.name}</h3>
-                        <p>الوفاة: ${c.death_year}</p>
-                    </div>
-                `).join('');
+            if (error) alert("خطأ دخول: " + error.message);
+            else {
+                document.getElementById('loginSection').style.display = 'none';
+                document.getElementById('addSection').style.display = 'block';
+                alert("تم الدخول! الآن يمكنك الإضافة.");
             }
-        }
+        };
 
-        // التحقق من حالة الدخول عند فتح الصفحة
-        supabase.auth.getSession().then(({ data }) => {
-            if (data.session) {
-                document.getElementById('authDiv').classList.add('hidden');
-                document.getElementById('addDiv').classList.remove('hidden');
-            }
-        });
-
-        loadData();
+        // عملية الإضافة
+        document.getElementById('addBtn').onclick = async () => {
+            const { error } = await supabase.from('sear').insert([{ name: document.getElementById('name').value }]);
+            if (error) alert("فشل الإضافة: " + error.message);
+            else alert("تمت الإضافة بنجاح!");
+        };
     </script>
 </body>
 </html>
