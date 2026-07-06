@@ -6,54 +6,54 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body class="bg-slate-50 p-6">
+<body class="bg-gray-100 p-6">
     <h1 class="text-3xl font-bold text-center mb-6">سير السلف</h1>
     
-    <button onclick="document.getElementById('modal').classList.remove('hidden')" class="bg-blue-600 text-white px-4 py-2 rounded mb-4">إضافة شخصية</button>
+    <div id="authSection" class="max-w-md mx-auto bg-white p-6 rounded shadow mb-6">
+        <h2 class="font-bold mb-2">دخول المسؤول للإضافة</h2>
+        <input type="email" id="email" placeholder="البريد الإلكتروني" class="w-full border p-2 mb-2">
+        <input type="password" id="pass" placeholder="كلمة المرور" class="w-full border p-2 mb-2">
+        <button onclick="login()" class="w-full bg-emerald-600 text-white p-2">تسجيل الدخول</button>
+    </div>
 
-    <div id="cardsContainer" class="grid gap-4"></div>
-
-    <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4">
-        <form id="addForm" class="bg-white p-6 rounded w-full max-w-sm">
-            <input type="text" id="name" placeholder="الاسم" class="w-full border p-2 mb-2" required>
-            <input type="text" id="death_year" placeholder="سنة الوفاة" class="w-full border p-2 mb-2">
-            <button type="submit" class="w-full bg-green-600 text-white p-2">حفظ</button>
-            <button type="button" onclick="document.getElementById('modal').classList.add('hidden')" class="w-full mt-2">إغلاق</button>
-        </form>
+    <div id="addSection" class="max-w-md mx-auto bg-white p-6 rounded shadow hidden">
+        <h2 class="font-bold mb-2">إضافة شخصية جديدة</h2>
+        <input type="text" id="name" placeholder="الاسم" class="w-full border p-2 mb-2">
+        <input type="text" id="death_year" placeholder="سنة الوفاة" class="w-full border p-2 mb-2">
+        <button onclick="addChar()" class="w-full bg-blue-600 text-white p-2">حفظ</button>
+        <button onclick="logout()" class="w-full mt-2 text-red-500">خروج</button>
     </div>
 
     <script>
-        const supabaseUrl = 'https://flwszpkrwgybibnarkvz.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsd3N6cGtyd2d5YmlibmFya3Z6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMzMjMzMjEsImV4cCI6MjA5ODg5OTMyMX0.XJql__Y7e06j337mLCRduBf3tuVdlkB3Lv43H4xyN3E';
-        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        const supabase = supabase.createClient(
+            'https://flwszpkrwgybibnarkvz.supabase.co', 
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsd3N6cGtyd2d5YmlibmFya3Z6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMzMjMzMjEsImV4cCI6MjA5ODg5OTMyMX0.XJql__Y7e06j337mLCRduBf3tuVdlkB3Lv43H4xyN3E'
+        );
 
-        async function load() {
-            const { data } = await supabase.from('sear').select('*');
-            const container = document.getElementById('cardsContainer');
-            container.innerHTML = data.map(c => `
-                <div class="bg-white p-4 border shadow">
-                    <h3>${c.name}</h3>
-                    <p>الوفاة: ${c.death_year}</p>
-                </div>
-            `).join('');
+        async function login() {
+            const email = document.getElementById('email').value;
+            const pass = document.getElementById('pass').value;
+            const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
+            if (error) alert(error.message);
+            else {
+                document.getElementById('authSection').classList.add('hidden');
+                document.getElementById('addSection').classList.remove('hidden');
+            }
         }
 
-        document.getElementById('addForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const { error } = await supabase.from('sear').insert([{
-                name: document.getElementById('name').value,
-                death_year: document.getElementById('death_year').value
-            }]);
-            
+        async function addChar() {
+            const { error } = await supabase.from('sear').insert([
+                { name: document.getElementById('name').value, death_year: document.getElementById('death_year').value }
+            ]);
             if (error) alert("خطأ: " + error.message);
-            else {
-                alert("تم الحفظ!");
-                document.getElementById('modal').classList.add('hidden');
-                load();
-            }
-        });
+            else alert("تم الحفظ بنجاح!");
+        }
 
-        load();
+        async function logout() {
+            await supabase.auth.signOut();
+            location.reload();
+        }
     </script>
 </body>
 </html>
+
